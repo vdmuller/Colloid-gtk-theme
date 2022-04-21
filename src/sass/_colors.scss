@@ -26,13 +26,13 @@
     @if ($state == 'secondary-fill') { @return rgba($black, 0.08); }
     @if ($state == 'fill') { @return rgba($black, 0.04); }
   } @else {
-    @if ($state == 'primary') { @return $white; }
+    @if ($state == 'primary') { @return rgba($white, 0.9); }
     @if ($state == 'secondary') { @return rgba($white, 0.7); }
     @if ($state == 'disabled') { @return rgba($white, 0.5); }
     @if ($state == 'secondary-disabled') { @return rgba($white, 0.3); }
     @if ($state == 'track') { @return rgba($white, 0.3); }
     @if ($state == 'track-disabled') { @return rgba($white, 0.12); }
-    @if ($state == 'divider') { @return rgba($white, 0.12); }
+    @if ($state == 'divider') { @return rgba($white, 0.1); }
     @if ($state == 'secondary-fill') { @return rgba($white, 0.08); }
     @if ($state == 'fill') { @return rgba($white, 0.04); }
   }
@@ -108,7 +108,7 @@ $inverse-indicator:                     if($theme == 'grey', $white, $primary);
 $applet-primary:                        if($theme == 'grey' and variant == 'light' and $topbar == 'dark', $grey-200, $primary);
 
 $background:                            if($variant == 'light', background(a), background(g));
-$surface:                               if($variant == 'light', background(a), background(h));
+$surface:                               if($variant == 'light', background(a), background(f));
 $base:                                  if($variant == 'light', background(a), background(g));
 $base-alt:                              if($variant == 'light', background(b), background(f));
 
