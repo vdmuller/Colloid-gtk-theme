@@ -1384,6 +1384,8 @@ searchbar > revealer > box {
   background-color: $background;
   background-clip: border-box;
   box-shadow: none;
+
+  entry { margin: 0; }
 }
 
 /***************
@@ -2698,7 +2700,7 @@ switch {
     transition: all $duration $ease-out;
     min-width: $small-size - 4px;
     min-height: $small-size - 4px;
-    margin: 1px;
+    margin: if($variant == 'light', 1px, 0);
     border-radius: $circular-radius;
     outline: none;
     box-shadow: none;
@@ -3881,7 +3883,7 @@ separator.sidebar {
 
   &.selection-mode,
   .selection-mode & {
-    background-color: rgba(white, 0.15);
+    background-color: rgba(white, 0.12);
   }
 }
 
@@ -4182,7 +4184,7 @@ tooltip {
     background-color: $tooltip;
     color: on($tooltip);
     box-shadow: $shadow-z4;
-    border-radius: $corner-radius/2;
+    border-radius: $corner-radius / 2;
     margin: 2px 6px 8px 6px;
     border: none;
   }
