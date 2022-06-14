@@ -3840,8 +3840,8 @@ decoration {
 
   &.minimize, &.maximize, &.close {
     color: $titlebar-text-secondary;
-    //background-color: gtkalpha(currentColor, 0.1);
-    background-color: transparent;
+    background-color: gtkalpha(currentColor, 0.1);
+    //background-color: transparent;
 
     &:hover {
       color: $titlebar-text;
