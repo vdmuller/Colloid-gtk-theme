@@ -1139,9 +1139,9 @@ searchbar > revealer > box {
   @if $variant == 'light' or $rimless == 'true' {
     box-shadow: inset 0 -1px $border, inset 0 1px highlight($titlebar);
   } @else {
-    //box-shadow: inset 0 -1px $border;
+    box-shadow: inset 0 -1px $border;
     //box-shadow: none;
-    box-shadow: 0px 2px 2px -4px darken($titlebar, 10%);
+    //box-shadow: 0px 2px 2px -4px darken($titlebar, 10%);
   }
 
   &:disabled { color: $titlebar-text-disabled; }
