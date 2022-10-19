@@ -57,6 +57,8 @@ OPTIONS:
 
   -s, --size VARIANT      Specify size variant [standard|compact] (Default: standard variant)
 
+  -u, --uninstall         Uninstall theme variant [theme|libadwaita] (Default: theme variant)
+
   --tweaks                Specify versions for tweaks [nord|dracula|black|rimless|normal] (only nord and dracula can not mix use with!)
                           1. nord:     Nord ColorScheme version
                           2. dracula   Dracula ColorScheme version
@@ -136,13 +138,6 @@ install() {
   sassc $SASSC_OPT "${SRC_DIR}/main/gtk-4.0/gtk${color}.scss"                                "${THEME_DIR}/gtk-4.0/gtk.css"
   sassc $SASSC_OPT "${SRC_DIR}/main/gtk-4.0/gtk-Dark.scss"                                   "${THEME_DIR}/gtk-4.0/gtk-dark.css"
 
-  # link gtk4.0 for libadwaita
-  mkdir -p                                                                                   "${HOME}/.config/gtk-4.0"
-  rm -rf "${HOME}/.config/gtk-4.0/"{assets,gtk.css,gtk-dark.css}
-  ln -sf "${THEME_DIR}/gtk-4.0/assets"                                                       "${HOME}/.config/gtk-4.0/assets"
-  ln -sf "${THEME_DIR}/gtk-4.0/gtk.css"                                                      "${HOME}/.config/gtk-4.0/gtk.css"
-  ln -sf "${THEME_DIR}/gtk-4.0/gtk-dark.css"                                                 "${HOME}/.config/gtk-4.0/gtk-dark.css"
-
   mkdir -p                                                                                   "${THEME_DIR}/cinnamon"
   cp -r "${SRC_DIR}/assets/cinnamon/common-assets"                                           "${THEME_DIR}/cinnamon/assets"
   cp -r "${SRC_DIR}/assets/cinnamon/assets${ELSE_DARK:-}/"*'.svg'                            "${THEME_DIR}/cinnamon/assets"
@@ -179,6 +174,7 @@ install() {
 themes=()
 colors=()
 sizes=()
+lcolors=()
 
 while [[ $# -gt 0 ]]; do
   case "${1}" in
@@ -200,14 +196,17 @@ while [[ $# -gt 0 ]]; do
         case "${color}" in
           standard)
             colors+=("${COLOR_VARIANTS[0]}")
+            lcolors+=("${COLOR_VARIANTS[0]}")
             shift
             ;;
           light)
             colors+=("${COLOR_VARIANTS[1]}")
+            lcolors+=("${COLOR_VARIANTS[1]}")
             shift
             ;;
           dark)
             colors+=("${COLOR_VARIANTS[2]}")
+            lcolors+=("${COLOR_VARIANTS[2]}")
             shift
             ;;
           -*|--*)
@@ -301,6 +300,29 @@ while [[ $# -gt 0 ]]; do
         esac
       done
       ;;
+    -u|--uninstall)
+      uninstall="true"
+      shift
+      for variant in "$@"; do
+        case "$variant" in
+          theme)
+            libadwaita="false"
+            ;;
+          libadwaita)
+            libadwaita="true"
+            shift
+            ;;
+          -*)
+            break
+            ;;
+          *)
+            echo "ERROR: Unrecognized uninstall variant '${1:-}'."
+            echo "Try '$0 --help' for more information."
+            exit 1
+            ;;
+        esac
+      done
+      ;;
     --tweaks)
       shift
       for variant in $@; do
@@ -308,29 +330,29 @@ while [[ $# -gt 0 ]]; do
           nord)
             nord="true"
             ctype="-Nord"
-            echo -e "Install Nord ColorScheme version! ..."
+            echo -e "Nord ColorScheme version! ..."
             shift
             ;;
           dracula)
             dracula="true"
             ctype="-Dracula"
-            echo -e "Install Dracula ColorScheme version! ..."
+            echo -e "Dracula ColorScheme version! ..."
             shift
             ;;
           black)
             blackness="true"
-            echo -e "Install Blackness version! ..."
+            echo -e "Blackness version! ..."
             shift
             ;;
           rimless)
             rimless="true"
-            echo -e "Install Rimless version! ..."
+            echo -e "Rimless version! ..."
             shift
             ;;
           normal)
             normal="true"
             window="-Normal"
-            echo -e "Install Normal window button version! ..."
+            echo -e "Normal window button version! ..."
             shift
             ;;
           -*)
@@ -362,6 +384,10 @@ fi
 
 if [[ "${#colors[@]}" -eq 0 ]] ; then
   colors=("${COLOR_VARIANTS[@]}")
+fi
+
+if [[ "${#lcolors[@]}" -eq 0 ]] ; then
+  lcolors=("${COLOR_VARIANTS[1]}")
 fi
 
 if [[ "${#sizes[@]}" -eq 0 ]] ; then
@@ -494,6 +520,75 @@ theme_tweaks() {
   fi
 }
 
+uninstall_link() {
+  [[ -L "${HOME}/.config/gtk-4.0/assets" ]] && rm -rf "${HOME}/.config/gtk-4.0/assets" && echo -e "\nUninstall ${HOME}/.config/gtk-4.0/assets link ..."
+  [[ -L "${HOME}/.config/gtk-4.0/gtk.css" ]] && rm -rf "${HOME}/.config/gtk-4.0/gtk.css" && echo -e "Uninstall ${HOME}/.config/gtk-4.0/gtk.css link ..."
+  [[ -L "${HOME}/.config/gtk-4.0/gtk-dark.css" ]] && rm -rf "${HOME}/.config/gtk-4.0/gtk-dark.css" && echo -e "Uninstall ${HOME}/.config/gtk-4.0/gtk-dark.css link ..."
+}
+
+link_libadwaita() {
+  local dest="${1}"
+  local name="${2}"
+  local theme="${3}"
+  local color="${4}"
+  local size="${5}"
+  local ctype="${6}"
+
+  local THEME_DIR="${1}/${2}${3}${4}${5}${6}"
+
+  rm -rf "${HOME}/.config/gtk-4.0/"{assets,gtk.css,gtk-dark.css}
+
+  echo -e "\nLink '$THEME_DIR/gtk-4.0' to '${HOME}/.config/gtk-4.0' for libadwaita..."
+
+  mkdir -p                                                                      "${HOME}/.config/gtk-4.0"
+  ln -sf "${THEME_DIR}/gtk-4.0/assets"                                          "${HOME}/.config/gtk-4.0/assets"
+  ln -sf "${THEME_DIR}/gtk-4.0/gtk.css"                                         "${HOME}/.config/gtk-4.0/gtk.css"
+  ln -sf "${THEME_DIR}/gtk-4.0/gtk-dark.css"                                    "${HOME}/.config/gtk-4.0/gtk-dark.css"
+}
+
+link_theme() {
+  for theme in "${themes[@]}"; do
+    for color in "${lcolors[@]}"; do
+      for size in "${sizes[@]}"; do
+        link_libadwaita "${dest:-$DEST_DIR}" "${_name:-$THEME_NAME}" "$theme" "$color" "$size" "$ctype"
+      done
+    done
+  done
+}
+
+clean() {
+  local dest="${1}"
+  local name="${2}"
+  local theme="${3}"
+  local color="${4}"
+  local size="${5}"
+  local type="${6}"
+  local screen="${7}"
+
+  local THEME_DIR="${1}/${2}${3}${4}${5}${6}${7}"
+
+  if [[ ${theme} == '' && ${color} == '' && ${size} == '' && ${type} == '' ]]; then
+    cleantheme='none'
+  elif [[ -d ${THEME_DIR} ]]; then
+    rm -rf ${THEME_DIR}
+    echo -e "Find: ${THEME_DIR} ! removing it ..."
+  fi
+}
+
+clean_theme() {
+  for theme in '' '-purple' '-pink' '-red' '-orange' '-yellow' '-green' '-teal' '-grey'; do
+    for color in '' '-light' '-dark'; do
+      for size in '' '-compact'; do
+        for type in '' '-nord' '-dracula'; do
+          for screen in '' '-hdpi' '-xhdpi'; do
+            clean "${dest:-${DEST_DIR}}" "${name:-${THEME_NAME}}" "${theme}" "${color}" "${size}" "${type}" "${screen}"
+          done
+        done
+      done
+    done
+  done
+}
+
 install_theme() {
   for theme in "${themes[@]}"; do
     for color in "${colors[@]}"; do
@@ -509,9 +604,41 @@ install_theme() {
   fi
 }
 
-./clean-old-theme.sh
+uninstall() {
+  local dest="${1}"
+  local name="${2}"
+  local theme="${3}"
+  local color="${4}"
+  local size="${5}"
+  local ctype="${6}"
 
-install_package && tweaks_temp && gnome_shell_version && install_theme
+  local THEME_DIR="${1}/${2}${3}${4}${5}${6}"
+
+  if [[ -d "${THEME_DIR}" ]]; then
+    echo -e "Uninstall ${THEME_DIR}... "
+    rm -rf "${THEME_DIR}"
+  fi
+}
+
+uninstall_theme() {
+  for theme in "${themes[@]}"; do
+    for color in "${colors[@]}"; do
+      for size in "${sizes[@]}"; do
+        uninstall "${dest:-$DEST_DIR}" "${_name:-$THEME_NAME}" "$theme" "$color" "$size" "$ctype"
+      done
+    done
+  done
+}
+
+if [[ "$uninstall" == 'true' ]]; then
+  if [[ "$libadwaita" == 'true' ]]; then
+    uninstall_link
+  else
+    echo && uninstall_theme && uninstall_link
+  fi
+else
+  clean_theme && install_package && tweaks_temp && gnome_shell_version && install_theme && link_theme
+fi
 
 echo
 echo Done.
